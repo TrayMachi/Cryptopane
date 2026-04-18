@@ -1,0 +1,6 @@
+data/*.json
+!data/.gitkeep
+
+backend/target/
+
+.DS_Store
