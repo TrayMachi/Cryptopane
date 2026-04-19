@@ -9,6 +9,8 @@ Item {
     required property string symbol
     required property string timeframe
 
+    property int staleAfterMs: 30000
+    property int nowMs: Date.now()
     property string dataPath: Qt.resolvedUrl("../../data/" + normalizedName(symbol) + "_" + normalizedName(timeframe) + ".json")
     property string symbolValue: symbol
     property string timeframeValue: timeframe
@@ -23,17 +25,63 @@ Item {
     property var bbUpper: []
     property var bbLower: []
 
+    readonly property int candleCount: closes.length
     readonly property bool hasData: closes.length > 1
-    readonly property string badgeText: {
+    readonly property bool stale: updatedAt > 0 && nowMs - updatedAt > staleAfterMs
+    readonly property string displayStatus: {
         if (rawStatus === "error") {
-            return "ERROR"
+            return "error"
         }
 
         if (!hasData) {
-            return "WAITING"
+            return "loading"
         }
 
-        return "LIVE"
+        if (rawStatus === "stale" || stale) {
+            return "stale"
+        }
+
+        return "ok"
+    }
+    readonly property string badgeText: {
+        switch (displayStatus) {
+        case "ok":
+            return "LIVE"
+        case "stale":
+            return "STALE"
+        case "error":
+            return "ERROR"
+        default:
+            return "WAITING"
+        }
+    }
+    readonly property string freshnessText: {
+        if (updatedAt <= 0) {
+            return "No sync"
+        }
+
+        return formatAge(nowMs - updatedAt)
+    }
+    readonly property string placeholderTitle: {
+        if (displayStatus === "error") {
+            return "Backend Error"
+        }
+
+        return "Waiting For Data"
+    }
+    readonly property string placeholderDetail: {
+        if (displayStatus === "error") {
+            return detailText
+        }
+
+        return "Run the Rust backend to generate " + fileNameFromPath(dataPath)
+    }
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: true
+        onTriggered: root.nowMs = Date.now()
     }
 
     FileView {
@@ -58,6 +106,29 @@ Item {
     function fileNameFromPath(pathValue) {
         var segments = String(pathValue).split("/")
         return segments[segments.length - 1]
+    }
+
+    function formatAge(ageMs) {
+        var positiveAge = Math.max(0, ageMs)
+
+        if (positiveAge < 2000) {
+            return "Just now"
+        }
+
+        var seconds = Math.floor(positiveAge / 1000)
+
+        if (seconds < 60) {
+            return seconds + "s ago"
+        }
+
+        var minutes = Math.floor(seconds / 60)
+
+        if (minutes < 60) {
+            return minutes + "m ago"
+        }
+
+        var hours = Math.floor(minutes / 60)
+        return hours + "h ago"
     }
 
     function parseNumericArray(value, allowNull) {
@@ -157,7 +228,9 @@ Item {
         var nextTimeframe = typeof payload.interval === "string" && payload.interval.length
             ? payload.interval
             : timeframe
-        var nextDetail = nextStatus === "error" ? "Backend reported an error" : "Widget data loaded"
+        var nextDetail = nextStatus === "error"
+            ? "Backend reported an error"
+            : (nextUpdatedAt > 0 ? "Synced " + formatAge(nowMs - nextUpdatedAt) : "Waiting for backend JSON")
 
         symbolValue = nextSymbol
         timeframeValue = nextTimeframe
