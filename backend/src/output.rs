@@ -32,6 +32,12 @@ pub fn write_widget_data(path: &Path, data: &WidgetData) -> Result<WriteOutcome>
     let mut payload = serde_json::to_vec(data).context("failed to serialize widget data")?;
     payload.push(b'\n');
 
+    if let Ok(existing) = fs::read(path) {
+        if existing == payload {
+            return Ok(WriteOutcome::Unchanged);
+        }
+    }
+
     let parent = path
         .parent()
         .context("widget data path is missing a parent directory")?;

@@ -131,6 +131,32 @@ Item {
         return hours + "h ago"
     }
 
+    function arraysEqual(left, right) {
+        if (left.length !== right.length) {
+            return false
+        }
+
+        for (var index = 0; index < left.length; index++) {
+            if (left[index] !== right[index]) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    function maybeAssignValue(name, value) {
+        if (root[name] !== value) {
+            root[name] = value
+        }
+    }
+
+    function maybeAssignArray(name, value) {
+        if (!arraysEqual(root[name], value)) {
+            root[name] = value.slice(0)
+        }
+    }
+
     function parseNumericArray(value, allowNull) {
         if (!Array.isArray(value)) {
             throw new Error("expected an array")
@@ -176,18 +202,18 @@ Item {
     }
 
     function clearData(status, detail) {
-        symbolValue = symbol
-        timeframeValue = timeframe
-        rawStatus = status
-        detailText = detail
-        price = 0
-        changePoints = 0
-        updatedAt = 0
-        closes = []
-        ema20 = []
-        bbMid = []
-        bbUpper = []
-        bbLower = []
+        maybeAssignValue("symbolValue", symbol)
+        maybeAssignValue("timeframeValue", timeframe)
+        maybeAssignValue("rawStatus", status)
+        maybeAssignValue("detailText", detail)
+        maybeAssignValue("price", 0)
+        maybeAssignValue("changePoints", 0)
+        maybeAssignValue("updatedAt", 0)
+        maybeAssignArray("closes", [])
+        maybeAssignArray("ema20", [])
+        maybeAssignArray("bbMid", [])
+        maybeAssignArray("bbUpper", [])
+        maybeAssignArray("bbLower", [])
     }
 
     function applyPayload(payload) {
@@ -232,17 +258,17 @@ Item {
             ? "Backend reported an error"
             : (nextUpdatedAt > 0 ? "Synced " + formatAge(nowMs - nextUpdatedAt) : "Waiting for backend JSON")
 
-        symbolValue = nextSymbol
-        timeframeValue = nextTimeframe
-        rawStatus = nextStatus
-        detailText = nextDetail
-        price = nextPrice
-        changePoints = nextChangePoints
-        updatedAt = nextUpdatedAt
-        closes = nextCloses
-        ema20 = nextEma20
-        bbMid = nextBbMid
-        bbUpper = nextBbUpper
-        bbLower = nextBbLower
+        maybeAssignValue("symbolValue", nextSymbol)
+        maybeAssignValue("timeframeValue", nextTimeframe)
+        maybeAssignValue("rawStatus", nextStatus)
+        maybeAssignValue("detailText", nextDetail)
+        maybeAssignValue("price", nextPrice)
+        maybeAssignValue("changePoints", nextChangePoints)
+        maybeAssignValue("updatedAt", nextUpdatedAt)
+        maybeAssignArray("closes", nextCloses)
+        maybeAssignArray("ema20", nextEma20)
+        maybeAssignArray("bbMid", nextBbMid)
+        maybeAssignArray("bbUpper", nextBbUpper)
+        maybeAssignArray("bbLower", nextBbLower)
     }
 }
