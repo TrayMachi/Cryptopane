@@ -63,6 +63,13 @@ Branch:
 Goal:
 - fetch live Binance klines in Rust and emit structured local output
 
+Delivered:
+- Rust backend crate under `backend/`
+- Binance REST polling every `10s` by default
+- atomic widget JSON writes to `data/btcusdt_5m.json`
+- configurable CLI/env overrides for symbol, interval, output path, refresh rate, and REST base URL
+- `updated_at` locked to Unix milliseconds
+
 ### Phase 4
 
 Branch:
@@ -70,6 +77,11 @@ Branch:
 
 Goal:
 - compute EMA20 and Bollinger Bands in Rust and keep output arrays aligned
+
+Delivered:
+- aligned `ema20`, `bb_mid`, `bb_upper`, and `bb_lower` arrays
+- warm-up entries serialized as `null`
+- Rust unit tests for EMA seeding and Bollinger flat-series behavior
 
 ### Phase 5
 
@@ -79,6 +91,11 @@ Branch:
 Goal:
 - connect widget rendering to the JSON data produced by the backend
 
+Delivered:
+- `WidgetDataSource.qml` file bridge using `Quickshell.Io/FileView`
+- live header and chart bindings backed by JSON instead of fake arrays
+- schema validation and graceful handling of missing, unreadable, or invalid files
+
 ### Phase 6
 
 Branch:
@@ -86,6 +103,11 @@ Branch:
 
 Goal:
 - refine layout, typography, state display, and desktop feel
+
+Delivered:
+- refined card colors, chart container styling, and status-aware badge colors
+- header freshness text and candle count
+- loading, stale, and error overlays that preserve the widget footprint
 
 ### Phase 7
 
@@ -95,6 +117,11 @@ Branch:
 Goal:
 - measure and improve runtime behavior only after the basic product works
 
+Delivered:
+- backend skips rewrites when widget JSON bytes are unchanged
+- frontend avoids replacing arrays when incoming data is identical
+- freshness timers update state text without forcing chart data churn
+
 ### Phase 8
 
 Branch:
@@ -102,6 +129,10 @@ Branch:
 
 Goal:
 - add optional future features such as websockets, multiple symbols, or richer IPC
+
+Delivered in current scope:
+- shell-level symbol/timeframe properties for easy reconfiguration without adding a config UI
+- backend REST base URL override for environments that need an alternate Binance host
 
 ## Merge Order
 

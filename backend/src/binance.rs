@@ -7,7 +7,8 @@ use serde::Deserialize;
 
 use crate::model::Kline;
 
-const BINANCE_KLINES_URL: &str = "https://data-api.binance.vision/api/v3/klines";
+pub const DEFAULT_BINANCE_BASE_URL: &str = "https://data-api.binance.vision";
+const KLINES_PATH: &str = "/api/v3/klines";
 
 #[derive(Debug, Deserialize)]
 struct RawKline(
@@ -35,12 +36,14 @@ pub fn build_client() -> Result<Client> {
 
 pub async fn fetch_klines(
     client: &Client,
+    base_url: &str,
     symbol: &str,
     interval: &str,
     limit: usize,
 ) -> Result<Vec<Kline>> {
+    let klines_url = format!("{}{}", base_url.trim_end_matches('/'), KLINES_PATH);
     let payload = client
-        .get(BINANCE_KLINES_URL)
+        .get(&klines_url)
         .query(&[
             ("symbol", symbol),
             ("interval", interval),
@@ -48,12 +51,12 @@ pub async fn fetch_klines(
         ])
         .send()
         .await
-        .with_context(|| format!("failed to reach Binance for {symbol} {interval}"))?
+        .with_context(|| format!("failed to reach Binance for {symbol} {interval} via {base_url}"))?
         .error_for_status()
-        .context("Binance returned an HTTP error")?
+        .with_context(|| format!("Binance returned an HTTP error via {base_url}"))?
         .json::<Vec<RawKline>>()
         .await
-        .context("failed to decode Binance klines response")?;
+        .with_context(|| format!("failed to decode Binance klines response from {base_url}"))?;
 
     payload
         .into_iter()

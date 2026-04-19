@@ -6,17 +6,22 @@ The project is intentionally split into phases so architecture lands on `main` f
 
 ## Current Status
 
-This repository is currently at Phase 0 only.
+The repository now includes the Phase 1-8 implementation on `main`.
 
-Phase 0 establishes:
+Implemented today:
 
-- repository structure
-- branch naming convention
-- frontend/backend boundaries
-- widget data contract
-- delivery scope for Phases 1 and 2
+- Quickshell widget shell with one window per screen
+- Canvas chart for closes, EMA20, and Bollinger Bands
+- Rust backend that fetches Binance klines and writes widget JSON atomically
+- indicator calculations with Rust tests
+- live QML file bridge with loading, stale, and error states
+- lightweight performance guards to avoid unnecessary JSON writes and chart array churn
+- a small configuration upgrade via QML-level symbol and timeframe properties
 
-No widget window, Rust backend, or live market integration is implemented yet.
+Known environment caveat:
+
+- this environment rejects `api.binance.com` TLS, so the backend defaults to `https://data-api.binance.vision`
+- the REST host remains overrideable via `CRYPTOPANE_BINANCE_BASE_URL` or `--binance-base-url`
 
 ## Branch Strategy
 
@@ -61,6 +66,7 @@ Explicitly out of scope for v1:
 ```text
 .
 ├── backend/
+│   ├── Cargo.toml
 │   └── src/
 ├── data/
 ├── docs/
@@ -71,3 +77,23 @@ Explicitly out of scope for v1:
 ```
 
 See `docs/roadmap.md` for the full project plan.
+
+## Running
+
+Backend once:
+
+```bash
+cargo run --manifest-path backend/Cargo.toml -- --once
+```
+
+Backend loop:
+
+```bash
+cargo run --manifest-path backend/Cargo.toml
+```
+
+Shell:
+
+```bash
+quickshell -p shell --no-duplicate
+```

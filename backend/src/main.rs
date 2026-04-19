@@ -38,6 +38,13 @@ struct Cli {
     #[arg(long, env = "CRYPTOPANE_OUTPUT_PATH")]
     output_path: Option<PathBuf>,
 
+    #[arg(
+        long,
+        env = "CRYPTOPANE_BINANCE_BASE_URL",
+        default_value = binance::DEFAULT_BINANCE_BASE_URL
+    )]
+    binance_base_url: String,
+
     #[arg(long, env = "CRYPTOPANE_ONCE", default_value_t = false)]
     once: bool,
 }
@@ -49,6 +56,7 @@ struct AppConfig {
     limit: usize,
     refresh_secs: u64,
     output_path: PathBuf,
+    binance_base_url: String,
     once: bool,
 }
 
@@ -114,14 +122,21 @@ impl AppConfig {
             limit: cli.limit,
             refresh_secs: cli.refresh_secs,
             output_path,
+            binance_base_url: cli.binance_base_url,
             once: cli.once,
         })
     }
 }
 
 async fn refresh_widget(client: &Client, config: &AppConfig) -> Result<WidgetData> {
-    let klines =
-        binance::fetch_klines(client, &config.symbol, &config.interval, config.limit).await?;
+    let klines = binance::fetch_klines(
+        client,
+        &config.binance_base_url,
+        &config.symbol,
+        &config.interval,
+        config.limit,
+    )
+    .await?;
     build_widget_data(config, &klines)
 }
 

@@ -3,6 +3,9 @@ import QtQuick
 import "components"
 
 Scope {
+    readonly property string widgetSymbol: "BTCUSDT"
+    readonly property string widgetTimeframe: "5m"
+
     Variants {
         model: Quickshell.screens
 
@@ -28,6 +31,8 @@ Scope {
 
             CryptoWidget {
                 anchors.fill: parent
+                symbol: widgetSymbol
+                timeframe: widgetTimeframe
             }
         }
     }
