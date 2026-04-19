@@ -18,7 +18,7 @@ Rectangle {
 
     function changeText() {
         if (!dataSource.hasData) {
-            return dataSource.rawStatus === "error" ? "Unavailable" : "Waiting"
+            return dataSource.displayStatus === "error" ? "Unavailable" : "Waiting"
         }
 
         var points = (dataSource.changePoints >= 0 ? "+" : "") + dataSource.changePoints.toFixed(2)
@@ -47,10 +47,13 @@ Rectangle {
             Layout.fillWidth: true
             symbol: dataSource.symbolValue
             timeframe: dataSource.timeframeValue
+            candleCount: dataSource.candleCount
             priceText: widget.priceText()
             changeText: widget.changeText()
+            freshnessText: dataSource.freshnessText
             positiveChange: dataSource.changePoints >= 0
             badgeText: dataSource.badgeText
+            badgeKind: dataSource.displayStatus
         }
 
         Rectangle {
@@ -59,7 +62,7 @@ Rectangle {
             radius: 18
             color: "#66161F2E"
             border.width: 1
-            border.color: "#334B5563"
+            border.color: dataSource.displayStatus === "error" ? "#55F87171" : "#334B5563"
 
             ChartCanvas {
                 anchors.fill: parent
@@ -70,6 +73,13 @@ Rectangle {
                 bbUpper: dataSource.bbUpper
                 bbMid: dataSource.bbMid
                 bbLower: dataSource.bbLower
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                visible: dataSource.displayStatus !== "ok" && dataSource.hasData
+                color: dataSource.displayStatus === "error" ? "#14EF4444" : "#14F59E0B"
             }
 
             Column {
@@ -83,7 +93,7 @@ Rectangle {
                     color: "#FFF8FAFC"
                     font.pixelSize: 15
                     font.bold: true
-                    text: dataSource.rawStatus === "error" ? "Backend Error" : "Waiting For Data"
+                    text: dataSource.placeholderTitle
                 }
 
                 Text {
@@ -93,10 +103,22 @@ Rectangle {
                     font.pixelSize: 12
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
-                    text: dataSource.rawStatus === "error"
-                        ? dataSource.detailText
-                        : "Run the Rust backend to generate live widget JSON"
+                    text: dataSource.placeholderDetail
                 }
+            }
+
+            Text {
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 12
+                anchors.bottomMargin: 10
+                visible: dataSource.displayStatus !== "ok" && dataSource.hasData
+                color: dataSource.displayStatus === "error" ? "#FFFECACA" : "#FFFDE68A"
+                font.pixelSize: 11
+                font.bold: true
+                text: dataSource.displayStatus === "error"
+                    ? "Showing last successful snapshot"
+                    : "Snapshot is older than 30s"
             }
         }
     }
