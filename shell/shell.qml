@@ -4,7 +4,7 @@ import "components"
 
 Scope {
     Variants {
-        model: Quickshell.screens.length > 0 ? [Quickshell.screens[0]] : []
+        model: Quickshell.screens
 
         PanelWindow {
             required property var modelData
