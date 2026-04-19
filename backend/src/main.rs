@@ -1,4 +1,5 @@
 mod binance;
+mod indicators;
 mod model;
 mod output;
 
@@ -10,6 +11,7 @@ use clap::Parser;
 use reqwest::Client;
 use tokio::time::{self, MissedTickBehavior};
 
+use crate::indicators::{bollinger_bands, ema};
 use crate::model::{Kline, WidgetData};
 
 const DEFAULT_SYMBOL: &str = "BTCUSDT";
@@ -129,6 +131,8 @@ fn build_widget_data(config: &AppConfig, klines: &[Kline]) -> Result<WidgetData>
     }
 
     let closes = klines.iter().map(|kline| kline.close).collect::<Vec<_>>();
+    let ema20 = ema(20, &closes);
+    let bands = bollinger_bands(20, 2.0, &closes);
     let price = *closes
         .last()
         .context("close series was unexpectedly empty")?;
@@ -143,11 +147,11 @@ fn build_widget_data(config: &AppConfig, klines: &[Kline]) -> Result<WidgetData>
         status: String::from("ok"),
         price,
         change_points: price - first,
-        ema20: vec![None; closes.len()],
-        bb_mid: vec![None; closes.len()],
-        bb_upper: vec![None; closes.len()],
-        bb_lower: vec![None; closes.len()],
         closes,
+        ema20,
+        bb_mid: bands.mid,
+        bb_upper: bands.upper,
+        bb_lower: bands.lower,
     })
 }
 
