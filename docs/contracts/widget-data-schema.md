@@ -38,8 +38,8 @@ This contract defines the data written by the Rust backend and consumed by the Q
 
 - `symbol`: exchange symbol, fixed to `BTCUSDT` in v1
 - `interval`: candle interval, fixed to `5m` in v1
-- `updated_at`: Unix timestamp in seconds or milliseconds; final unit must be documented when implemented in Phase 3
-- `status`: expected values include `ok`, `stale`, or `error`
+- `updated_at`: Unix timestamp in milliseconds
+- `status`: backend writes `ok` or `error`; the frontend may derive `stale` from `updated_at`
 - `price`: latest close price
 - `change_points`: visible-range change in absolute points; percentage can be derived later if needed
 - `closes`: visible close series
@@ -47,7 +47,3 @@ This contract defines the data written by the Rust backend and consumed by the Q
 - `bb_mid`: middle Bollinger line aligned to `closes`
 - `bb_upper`: upper Bollinger line aligned to `closes`
 - `bb_lower`: lower Bollinger line aligned to `closes`
-
-## Open Implementation Detail
-
-Phase 3 should decide whether `updated_at` is stored as Unix seconds or Unix milliseconds. The unit must remain consistent after that choice is made.
