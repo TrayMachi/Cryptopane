@@ -7,7 +7,7 @@ Item {
     required property string priceText
     required property string changeText
     required property bool positiveChange
-    property string badgeText: "SIMULATED"
+    property string badgeText: "WAITING"
 
     implicitHeight: headerLayout.implicitHeight
 
@@ -30,7 +30,7 @@ Item {
             Text {
                 color: "#FF94A3B8"
                 font.pixelSize: 12
-                text: timeframe + " widget shell"
+                text: timeframe + " data bridge"
             }
         }
 
