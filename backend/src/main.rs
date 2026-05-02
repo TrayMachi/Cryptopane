@@ -1,4 +1,5 @@
 mod binance;
+mod indicators;
 mod model;
 mod output;
 
@@ -10,11 +11,12 @@ use clap::Parser;
 use reqwest::Client;
 use tokio::time::{self, MissedTickBehavior};
 
+use crate::indicators::{bollinger_bands, ema, rsi};
 use crate::model::{Kline, WidgetData};
 
 const DEFAULT_SYMBOL: &str = "BTCUSDT";
 const DEFAULT_INTERVAL: &str = "5m";
-const DEFAULT_LIMIT: usize = 120;
+const DEFAULT_LIMIT: usize = 500;
 const DEFAULT_REFRESH_SECS: u64 = 10;
 
 #[derive(Debug, Clone, Parser)]
@@ -94,8 +96,8 @@ async fn main() -> Result<()> {
 
 impl AppConfig {
     fn from_cli(cli: Cli) -> Result<Self> {
-        if cli.limit < 20 {
-            bail!("--limit must be at least 20 so Bollinger and EMA outputs can warm up");
+        if cli.limit < 200 {
+            bail!("--limit must be at least 200 so EMA 200 can warm up");
         }
 
         if cli.refresh_secs == 0 {
@@ -129,6 +131,11 @@ fn build_widget_data(config: &AppConfig, klines: &[Kline]) -> Result<WidgetData>
     }
 
     let closes = klines.iter().map(|kline| kline.close).collect::<Vec<_>>();
+    let ema9 = ema(9, &closes);
+    let ema21 = ema(21, &closes);
+    let ema200 = ema(200, &closes);
+    let bands = bollinger_bands(20, 2.0, &closes);
+    let rsi14 = rsi(14, &closes);
     let price = *closes
         .last()
         .context("close series was unexpectedly empty")?;
@@ -143,11 +150,14 @@ fn build_widget_data(config: &AppConfig, klines: &[Kline]) -> Result<WidgetData>
         status: String::from("ok"),
         price,
         change_points: price - first,
-        ema20: vec![None; closes.len()],
-        bb_mid: vec![None; closes.len()],
-        bb_upper: vec![None; closes.len()],
-        bb_lower: vec![None; closes.len()],
         closes,
+        ema9,
+        ema21,
+        ema200,
+        rsi14,
+        bb_mid: bands.mid,
+        bb_upper: bands.upper,
+        bb_lower: bands.lower,
     })
 }
 
